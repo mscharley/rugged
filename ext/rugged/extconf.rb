@@ -1,4 +1,5 @@
 require 'mkmf'
+require 'shellwords'
 
 RbConfig::MAKEFILE_CONFIG['CC'] = ENV['CC'] if ENV['CC']
 
@@ -94,12 +95,10 @@ else
       # statically so we put the libraries in by hand. It's important that we put the libraries themselves
       # in $LIBS or the final linking stage won't pick them up
       if windows?
-        $LDFLAGS << " " + "-L#{libssh2.path}/lib"
         $LDFLAGS << " " + "-L#{Dir.pwd}/deps/winhttp"
-        $LIBS << " -lwinhttp -lcrypt32 -lrpcrt4 -lole32 " + `pkg-config --libs-only-l --static libgit2`.strip
-      else
-        $LDFLAGS << " " + `pkg-config --libs --static libgit2`.strip
+        $LIBS << " -lwinhttp -lcrypt32 -lrpcrt4 -lole32"
       end
+      $LDFLAGS << " " + Shellwords.split(`pkg-config --libs --static libgit2`.strip).map {|l| "\"#{l}\""}.join(' ')
     end
   end
 
